@@ -17,7 +17,7 @@ Setup required
   <img width="1200" alt="Screenshot 2023-05-27 at 7 20 54 PM" src="https://github.com/ongyongen/sg-geocaches/assets/97529863/d94d5183-22eb-4d99-abb1-68aaa3fa0a3d">
   <img width="1200" alt="Screenshot 2023-05-27 at 7 26 46 PM" src="https://github.com/ongyongen/sg-geocaches/assets/97529863/4966af5d-0367-42f2-b8fb-59bf5901763d">
 - Convert cURL code to Python at this link : https://curlconverter.com/python/ and copy over the cookies data into `cookies.py`
-- Data in `cookies.py
+- Data in `cookies.py`
  <br></br><img width="250" alt="Screenshot 2023-05-27 at 7 03 11 PM" src="https://github.com/ongyongen/sg-geocaches/assets/97529863/a69e23ec-da18-4d77-bb21-822370561979">
 - run the Scraper.py file to start the scraping (edit the name of the output CSV and JSON file if needed)
 
