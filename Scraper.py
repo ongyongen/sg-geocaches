@@ -2,6 +2,7 @@ import requests
 import pandas as pd
 from bs4 import BeautifulSoup
 from data import *
+from cookies import * 
 
 class GeocacheScraper:
 
@@ -33,7 +34,7 @@ class GeocacheScraper:
 
     # Method to scrape for all cache data from the results table 
     def scrape_table_data(self):
-        response = requests.get(self.table_url, params=params_table, cookies=cookies_table, headers=headers_table)
+        response = requests.get(self.table_url, params=table_params, cookies=table_cookies, headers=table_headers)
         res = response.json()['results']
     
         # Obtain all relevant data for non-premium caches and copy it over to the dataframe
