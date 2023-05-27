@@ -19,9 +19,9 @@ Setup required
 - Convert cURL code to Python at this link : https://curlconverter.com/python/ and copy over the cookies data into `cookies.py`
 - Data in `cookies.py`
  <br></br><img width="250" alt="Screenshot 2023-05-27 at 7 03 11 PM" src="https://github.com/ongyongen/sg-geocaches/assets/97529863/a69e23ec-da18-4d77-bb21-822370561979">
-- run the Scraper.py file to start the scraping (edit the name of the output CSV and JSON file if needed)
+- run the `Scraper.py` file to start the scraping (edit the name of the output CSV and JSON file if needed)
 
 Note
-- Example output files with Singapore's geocache data are provided within this repo in CSV and JSON format (sg_caches.csv and sg_caches.json)
+- Example output files with Singapore's geocache data are provided within this repo in CSV and JSON format (`sg_caches.csv` and `sg_caches.json`)
 - These files contain data that are last scraped on 27 May 2023
 
