@@ -89,6 +89,8 @@ class GeocacheScraper:
             "placedDate","lastFoundDate","lastFoundTime","detailsUrl"
         ])
 
+        print("Done scraping from table")
+
     # Method to scrape for cache description, hints and nos of times cache is found / not found (at the individual cache listing pages)
     def scrape_cache_desc(self):
         for i in range(len(self.df)):
@@ -108,22 +110,26 @@ class GeocacheScraper:
                     decoded_hint += char
                 else:
                     decoded_hint += self.hint_decryption_keys[char]
+            
+            print("Scraped: " + code)
 
             # scrape for total nos of times cache is found / not found
             tally = soup.find_all("ul", {"class": "LogTotals"})[0].text.strip().split(" ")
-            found = tally[0]
-            dnf = tally[1]
+            found = int(tally[0].replace(",",""))
+            dnf = int(tally[1].replace(",",""))
 
             self.df.loc[i, 'description'] = desc
             self.df.loc[i, 'hint'] = decoded_hint
             self.df.loc[i, 'total_found'] = found
             self.df.loc[i, 'total_did_not_find'] = dnf
-     
+        print("Done scraping from individual cache description pages")
+
     # method to export dataframe as a csv and json
     def export_files(self, filename):
         self.df.to_csv(filename + '.csv')
         self.df.to_json(filename + '.json', orient='records')
 
+# Start the scraper
 scraper = GeocacheScraper()
 scraper.scrape_table_data()
 scraper.scrape_cache_desc()
