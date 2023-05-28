@@ -41,10 +41,9 @@ class GeocacheScraper:
         for i in range(len(res)):
             if res[i]['premiumOnly'] == False:
                 data = res[i]
-                self.df.loc[i, 'id'] = data['id']
-                self.df.loc[i,'code'] =  data['code']
+                self.df.loc[i, 'cache_id'] = data['id']
+                self.df.loc[i,'cache_code'] =  data['code']
                 self.df.loc[i,'name'] = data['name']
-                self.df.loc[i,'premiumOnly'] = data['premiumOnly'],
                 self.df.loc[i,'favoritePoints'] = data['favoritePoints'],
                 self.df.loc[i,'geocacheType'] = data['geocacheType'],
                 self.df.loc[i,'containerType'] = data['containerType'],
@@ -61,7 +60,6 @@ class GeocacheScraper:
                 self.df.loc[i,'trackableCount'] = data['trackableCount']
 
         # Clean up data to obtain only the integer values
-        self.df['premiumOnly'] = list(map(lambda x: x[0], list(self.df['premiumOnly'])))
         self.df['favoritePoints'] = list(map(lambda x: x[0], list(self.df['favoritePoints'])))
         self.df['geocacheType'] = list(map(lambda x: x[0], list(self.df['geocacheType'])))
         self.df['containerType'] = list(map(lambda x: x[0], list(self.df['containerType'])))
@@ -83,7 +81,7 @@ class GeocacheScraper:
         self.df = self.df.reset_index()
         self.df = self.df.drop(columns=["index", "premiumOnly"])
         self.df = self.df.reindex(columns=[
-            "id","code","name","geocacheType","containerType","difficulty","terrain",
+            "cache_id","cache_code","name","geocacheType","containerType","difficulty","terrain",
             "cacheStatus","favoritePoints","trackableCount",
             "latitude","longitude","ownerId","ownerName",
             "placedDate","lastFoundDate","lastFoundTime","detailsUrl"
@@ -94,7 +92,7 @@ class GeocacheScraper:
     # Method to scrape for cache description, hints and nos of times cache is found / not found (at the individual cache listing pages)
     def scrape_cache_desc(self):
         for i in range(len(self.df)):
-            code = self.df.loc[i,'code']
+            code = self.df.loc[i,'cache_code']
             response = requests.get(self.cache_url + code, cookies=desc_cookies, headers=desc_headers)
             soup = BeautifulSoup(response.text, 'html.parser')
 
