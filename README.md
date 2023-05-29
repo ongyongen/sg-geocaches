@@ -24,4 +24,4 @@ Setup required
 
 Note
 - Example output files with Singapore's geocache data are provided within this repo in JSON format (`sg_caches.json`)
-- These files contain data that are last scraped on 29 May 2023
+- These files contain data that are last scraped on 30 May 2023
