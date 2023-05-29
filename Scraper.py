@@ -22,10 +22,10 @@ class GeocacheScraper:
     
         # dataframe to copy over the scraped data
         self.df = pd.DataFrame(columns=[
-            'cache_id','cache_code', 'name','premiumOnly','favoritePoints',
-            'geocacheType','containerType','difficulty', 'terrain',
-            'cacheStatus', 'latitude', 'longitude', 'detailsUrl', 'placedDate',
-            'lastFoundDate', 'ownerName', 'ownerId', 'trackableCount'
+            'cache_id','cache_code', 'name','favorite_points',
+            'geocache_type','container_type','difficulty', 'terrain',
+            'latitude', 'longitude', 'details_url', 'placed_date',
+            'last_found_date', 'owner_name', 'owner_id', 'trackable_count'
             ]
         )
         
@@ -36,6 +36,29 @@ class GeocacheScraper:
             "g": "t", "t": "g", "h": "u", "u": "h", "i": "v", "v": "i",
             "j": "w", "w": "j", "k": "x", "x": "k", "l": "y", "y": "l",
             "m": "z", "z": "m"
+        }
+
+        # dictionary for mapping int values to cache types
+        self.cache_types = {
+            2 : "traditional",
+            3 : "multi-cache",
+            4 : "virtual",
+            5 : "letterbox",
+            6 : "event",
+            8 : "mystery",
+            137 : "earth",
+            1858 : "whereigo"
+        }
+
+        # dictionary for mapping int values to container types
+        self.container_types = {
+            1 : "not specified",
+            2 : "micro",
+            3 : "regular",
+            4 : "large",
+            5 : "virtual",
+            6 : "other",
+            8 : "small"
         }
 
     # Method to scrape for all cache data from the results table 
@@ -50,38 +73,45 @@ class GeocacheScraper:
                 self.df.loc[i, 'cache_id'] = data['id']
                 self.df.loc[i,'cache_code'] =  data['code']
                 self.df.loc[i,'name'] = data['name']
-                self.df.loc[i,'favoritePoints'] = data['favoritePoints'],
-                self.df.loc[i,'geocacheType'] = data['geocacheType'],
-                self.df.loc[i,'containerType'] = data['containerType'],
+                self.df.loc[i,'favorite_points'] = data['favoritePoints'],
                 self.df.loc[i,'difficulty'] = data['difficulty'],
                 self.df.loc[i,'terrain'] = data['terrain'],
-                self.df.loc[i,'cacheStatus'] = data['cacheStatus'],
                 self.df.loc[i,'latitude'] = data['postedCoordinates']['latitude']
                 self.df.loc[i,'longitude'] = data['postedCoordinates']['longitude']
-                self.df.loc[i,'detailsUrl'] = data['detailsUrl']
-                self.df.loc[i,'placedDate'] = data['placedDate']
-                self.df.loc[i,'lastFoundDate'] = data['lastFoundDate']
-                self.df.loc[i,'ownerName'] = data['owner']['username']
-                self.df.loc[i,'ownerId'] = data['owner']['code']
-                self.df.loc[i,'trackableCount'] = data['trackableCount']
+                self.df.loc[i,'details_url'] = data['detailsUrl']
+                self.df.loc[i,'placed_date'] = data['placedDate']
+                self.df.loc[i,'last_found_date'] = data['lastFoundDate']
+                self.df.loc[i,'owner_name'] = data['owner']['username']
+                self.df.loc[i,'owner_id'] = data['owner']['code']
+                self.df.loc[i,'trackable_count'] = data['trackableCount']
+
+                # Map int representation to cache and container type 
+                geocache_type = data['geocacheType']
+                if geocache_type not in self.cache_types:
+                    self.df.loc[i,'geocache_type'] = "other"
+                else:
+                    self.df.loc[i,'geocache_type'] = [self.cache_types[geocache_type]]
+
+                container_type = data['containerType']
+                if container_type not in self.container_types:
+                    self.df.loc[i,'container_type'] = "other"
+                else:
+                    self.df.loc[i,'container_type'] = [self.container_types[container_type]]
 
         # Clean up data to obtain only the integer values
-        self.df['favoritePoints'] = list(map(lambda x: x[0], list(self.df['favoritePoints'])))
-        self.df['geocacheType'] = list(map(lambda x: x[0], list(self.df['geocacheType'])))
-        self.df['containerType'] = list(map(lambda x: x[0], list(self.df['containerType'])))
+        self.df['favorite_points'] = list(map(lambda x: x[0], list(self.df['favorite_points'])))
+        self.df['geocache_type'] = list(map(lambda x: x[0], list(self.df['geocache_type'])))
+        self.df['container_type'] = list(map(lambda x: x[0], list(self.df['container_type'])))
         self.df['difficulty'] = list(map(lambda x: x[0], list(self.df['difficulty'])))
         self.df['terrain'] = list(map(lambda x: x[0], list(self.df['terrain'])))
-        self.df['cacheStatus'] = list(map(lambda x: x[0], list(self.df['cacheStatus'])))
 
         # Format URL link to individual caches
-        self.df['detailsUrl'] = list(map(lambda x: "www.geocaching.com" + str(x), list(self.df['detailsUrl'])))
+        self.df['details_url'] = list(map(lambda x: "www.geocaching.com" + str(x), list(self.df['details_url'])))
 
         # Format datetime into separate cols (either date or time)
-        self.df['placedDate'] = list(map(lambda x: str(x).split("T")[0] if len(str(x)) > 0 else x, list(self.df['placedDate'])))
-        found_date = [str(x).split("T")[0] if len(str(x)) > 0 else x for x in list(self.df['lastFoundDate'])]
-        found_time = [str(x).split("T")[1] if len(str(x)) > 0 else x for x in list(self.df['lastFoundDate'])]
-        self.df['lastFoundDate'] = found_date
-        self.df['lastFoundTime'] = found_time
+        self.df['placed_date'] = list(map(lambda x: str(x).split("T")[0] if len(str(x)) > 0 else x, list(self.df['placed_date'])))
+        found_date = [str(x).split("T")[0] if len(str(x)) > 0 else x for x in list(self.df['last_found_date'])]
+        self.df['last_found_date'] = found_date
 
         # match coordinates to the correct planning area polygon 
         self.df = self.df.reset_index()
@@ -102,12 +132,11 @@ class GeocacheScraper:
         
         # Rearrange columns
         self.df = self.df.reset_index()
-        self.df = self.df.drop(columns=["level_0", "index", "premiumOnly"])
+        self.df = self.df.drop(columns=["level_0", "index"])
         self.df = self.df.reindex(columns=[
-            "cache_id","cache_code","name","geocacheType","containerType","difficulty","terrain",
-            "cacheStatus","favoritePoints","trackableCount",
-            "latitude","longitude","planning_area", "ownerId","ownerName",
-            "placedDate","lastFoundDate","lastFoundTime","detailsUrl"
+            "cache_id","cache_code","name","geocache_type","container_type","difficulty","terrain",
+            "favorite_points","trackable_count","latitude","longitude","planning_area", 
+            "owner_id","owner_name","placed_date","last_found_date","last_found_time","details_url"
         ])
 
         print("Done scraping from table")
@@ -153,7 +182,7 @@ class GeocacheScraper:
 
     # clean the file one last time to remove invalid entries (ie missing detailsUrl)
     def clean_files_before_export(self):
-        self.df = self.df[self.df['detailsUrl'].str.strip().astype(bool)]
+        self.df = self.df[self.df['details_url'].str.strip().astype(bool)]
         self.df = self.df.reset_index()
         self.df = self.df.drop(columns=["index"])
 
@@ -166,4 +195,4 @@ scraper = GeocacheScraper()
 scraper.scrape_table_data()
 scraper.scrape_cache_desc()
 scraper.clean_files_before_export()
-scraper.export_files('sg_caches')
+scraper.export_files('sg_geocaches')
