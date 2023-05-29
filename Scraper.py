@@ -1,5 +1,8 @@
+import math
 import requests
 import pandas as pd
+import geopandas as gpd 
+from shapely.geometry import Point
 from bs4 import BeautifulSoup
 from data import *
 from cookies import * 
@@ -13,10 +16,13 @@ class GeocacheScraper:
 
         # url for the individual cache listing pages
         self.cache_url = 'https://www.geocaching.com/geocache/'
+
+        # geodataframe of SG planning area polygons (from data.gov.sg)
+        self.gdf = gpd.read_file("map.geojson")
     
         # dataframe to copy over the scraped data
         self.df = pd.DataFrame(columns=[
-            'id','code', 'name','premiumOnly','favoritePoints',
+            'cache_id','cache_code', 'name','premiumOnly','favoritePoints',
             'geocacheType','containerType','difficulty', 'terrain',
             'cacheStatus', 'latitude', 'longitude', 'detailsUrl', 'placedDate',
             'lastFoundDate', 'ownerName', 'ownerId', 'trackableCount'
@@ -77,13 +83,30 @@ class GeocacheScraper:
         self.df['lastFoundDate'] = found_date
         self.df['lastFoundTime'] = found_time
 
+        # match coordinates to the correct planning area polygon 
+        self.df = self.df.reset_index()
+        for i in range(len(self.df)):
+            point = Point(self.df.loc[i,'longitude'], self.df.loc[i,'latitude'])
+            found_pa = False
+            for j in range(len(self.gdf)):
+                polygon = self.gdf.loc[j,'geometry']
+                if polygon.contains(point):
+                    found_pa = True
+                    self.df.loc[i,'planning_area'] = self.gdf.loc[j,'PLN_AREA_N']
+                    break
+            if found_pa == False:
+                self.df.loc[i,'planning_area'] = "NIL"
+
+        # filter out entries in Johor
+        self.df = self.df[self.df['planning_area'] != "NIL"]
+        
         # Rearrange columns
         self.df = self.df.reset_index()
-        self.df = self.df.drop(columns=["index", "premiumOnly"])
+        self.df = self.df.drop(columns=["level_0", "index", "premiumOnly"])
         self.df = self.df.reindex(columns=[
             "cache_id","cache_code","name","geocacheType","containerType","difficulty","terrain",
             "cacheStatus","favoritePoints","trackableCount",
-            "latitude","longitude","ownerId","ownerName",
+            "latitude","longitude","planning_area", "ownerId","ownerName",
             "placedDate","lastFoundDate","lastFoundTime","detailsUrl"
         ])
 
@@ -97,10 +120,15 @@ class GeocacheScraper:
             soup = BeautifulSoup(response.text, 'html.parser')
 
             # scrape for cache description
-            desc = soup.find_all("span", {"id": "ctl00_ContentBody_LongDescription"})[0].text.replace("\xa0", " ").replace("\n", " ")
+            desc = ""
+            if len(soup.find_all("span", {"id": "ctl00_ContentBody_LongDescription"})) > 0:
+                desc = soup.find_all("span", {"id": "ctl00_ContentBody_LongDescription"})[0].text.replace("\xa0", " ").replace("\n", " ")
 
             # scrape for and decode cache hint
-            hint = soup.find_all("div", {"id": "div_hint"})[0].text.replace("\r\n","").strip()
+            hint = ""
+            if len(soup.find_all("div", {"id": "div_hint"})) > 0:
+                hint = soup.find_all("div", {"id": "div_hint"})[0].text.replace("\r\n","").strip()
+
             decoded_hint = ""
             for char in hint:
                 char = char.lower()
@@ -115,20 +143,27 @@ class GeocacheScraper:
             tally = soup.find_all("ul", {"class": "LogTotals"})[0].text.strip().split(" ")
             found = int(tally[0].replace(",",""))
             dnf = int(tally[1].replace(",",""))
-
             self.df.loc[i, 'description'] = desc
             self.df.loc[i, 'hint'] = decoded_hint
             self.df.loc[i, 'total_found'] = found
             self.df.loc[i, 'total_did_not_find'] = dnf
+            self.df.loc[i, 'found_rate'] = math.ceil((found/(found+dnf)) * 100)
+
         print("Done scraping from individual cache description pages")
+
+    # clean the file one last time to remove invalid entries (ie missing detailsUrl)
+    def clean_files_before_export(self):
+        self.df = self.df[self.df['detailsUrl'].str.strip().astype(bool)]
+        self.df = self.df.reset_index()
+        self.df = self.df.drop(columns=["index"])
 
     # method to export dataframe as a csv and json
     def export_files(self, filename):
-        self.df.to_csv(filename + '.csv')
         self.df.to_json(filename + '.json', orient='records')
 
 # Start the scraper
 scraper = GeocacheScraper()
 scraper.scrape_table_data()
 scraper.scrape_cache_desc()
+scraper.clean_files_before_export()
 scraper.export_files('sg_caches')
