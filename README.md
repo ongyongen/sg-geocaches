@@ -3,6 +3,7 @@ Scraper for all non-premium geocaches in Singapore from https://www.geocaching.c
 
 Libraries used
 - pandas (https://pandas.pydata.org)
+- geopandas (https://geopandas.org/en/stable/)
 - BeautifulSoup (https://beautiful-soup-4.readthedocs.io/en/latest/)
 - requests (https://pypi.org/project/requests/)
 
@@ -22,6 +23,5 @@ Setup required
 - run the `Scraper.py` file to start the scraping (edit the name of the output CSV and JSON file if needed)
 
 Note
-- Example output files with Singapore's geocache data are provided within this repo in CSV and JSON format (`sg_caches.csv` and `sg_caches.json`)
-- These files contain data that are last scraped on 28 May 2023
-
+- Example output files with Singapore's geocache data are provided within this repo in JSON format (`sg_caches.json`)
+- These files contain data that are last scraped on 29 May 2023
