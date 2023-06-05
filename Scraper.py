@@ -136,7 +136,7 @@ class GeocacheScraper:
         self.df = self.df.reindex(columns=[
             "cache_id","cache_code","name","geocache_type","container_type","difficulty","terrain",
             "favorite_points","trackable_count","latitude","longitude","planning_area", 
-            "owner_id","owner_name","placed_date","last_found_date","last_found_time","details_url"
+            "owner_id","owner_name","placed_date","last_found_date","details_url"
         ])
 
         print("Done scraping from table")
